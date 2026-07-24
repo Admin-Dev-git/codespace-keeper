@@ -1,0 +1,27 @@
+# Codespace Keeper — uses an EXTERNAL MongoDB cluster (e.g. MongoDB Atlas).
+#
+# Set MONGO_URI in .env to your cluster connection string, for example:
+#   MONGO_URI=mongodb+srv://user:pass@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority
+#
+# Because ALL state (accounts, tokens, SSH keys, codespaces, startup
+# commands, keep-alive flags) lives in MongoDB, you can destroy this server
+# and run `docker compose up -d --build` on a new one — the bot picks up
+# exactly where it left off (keep-alives auto-resume on startup).
+
+services:
+  bot:
+    build: .
+    container_name: codespace-keeper-bot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /app/data
+      # Container clock timezone -> logs and displayed times match IST.
+      TZ: ${SCHEDULE_TZ:-Asia/Kolkata}
+    volumes:
+      - bot_data:/app/data
+
+volumes:
+  # Only a cache for per-account gh config / SSH key files.
+  # Safe to lose: everything is re-materialized from MongoDB.
+  bot_data:
